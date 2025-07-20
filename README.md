@@ -103,6 +103,7 @@ GET /api/progress/:courseId
 Authorization: Bearer <token>
 ```
 
+<<<<<<< HEAD
 ## Usage Examples
 
 ### Creating an Admin User
@@ -143,6 +144,11 @@ curl -X POST http://localhost:5000/api/courses \
 ## Project Structure
 
 ```
+=======
+## Project Structure
+
+```
+>>>>>>> 387b646b2539573d4fb6285604c53541eb4d14fb
 ├── config/
 │   └── db.js          # Database connection
 ├── controllers/
