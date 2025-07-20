@@ -1,298 +1,171 @@
-```markdown
-# LMS API Documentation
+# Learning Management System API
 
-This document provides detailed specifications for the Learning Management System (LMS) backend API.
+A Node.js backend for managing online courses, user enrollments, and learning progress.
 
-**Base URL**: `http://localhost:5000`
+## Quick Start
 
----
-
-## Authentication
-
-Protected endpoints require a JSON Web Token (JWT) to be sent in the request header.
-
-- **Header**: `Authorization`
-- **Value**: `Bearer `
-
-A token can be obtained by using the `/api/auth/login` endpoint.
-
----
-
-## 1. Auth Endpoints
-
-### **`POST /api/auth/signup`**
-
-Registers a new user in the system. Can also be used to create an admin user by including `"role": "admin"`.
-
-**Headers**
-| Key            | Value              |
-| :------------- | :----------------- |
-| `Content-Type` | `application/json` |
-
-**Request Body**
+```bash
+npm install
+npm run dev
 ```
+
+Server runs on `http://localhost:5000`
+
+## Setup
+
+1. Create a `.env` file:
+```env
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/lms-backend
+JWT_SECRET=your-super-secret-jwt-key-here
+```
+
+2. Make sure MongoDB is running
+
+## API Endpoints
+
+### Authentication
+
+**Register User**
+```http
+POST /api/auth/signup
+Content-Type: application/json
+
 {
-  "username": "testuser",
-  "email": "test@example.com",
+  "username": "john_doe",
+  "email": "john@example.com", 
   "password": "password123",
   "role": "user"
 }
 ```
 
-**Responses**
-- **`201 Created`** (Success)
-  ```
-  {
-      "success": true,
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-  ```
-- **`400 Bad Request`** (User already exists)
-  ```
-  {
-      "success": false,
-      "message": "User already exists"
-  }
-  ```
+**Login**
+```http
+POST /api/auth/login
+Content-Type: application/json
 
-### **`POST /api/auth/login`**
-
-Authenticates an existing user and returns a JWT for accessing protected routes.
-
-**Headers**
-| Key            | Value              |
-| :------------- | :----------------- |
-| `Content-Type` | `application/json` |
-
-**Request Body**
-```
 {
-  "email": "test@example.com",
+  "email": "john@example.com",
   "password": "password123"
 }
 ```
 
-**Responses**
-- **`200 OK`** (Success)
-  ```
-  {
-      "success": true,
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
-  ```
-- **`401 Unauthorized`** (Invalid credentials)
-  ```
-  {
-      "success": false,
-      "message": "Invalid credentials"
-  }
-  ```
+### Courses
 
----
-
-## 2. Course Endpoints
-
-### **`POST /api/courses`**
-
-Creates a new course. **(Admin only)**
-
-**Headers**
-| Key             | Value                       |
-| :-------------- | :-------------------------- |
-| `Content-Type`  | `application/json`          |
-| `Authorization` | `Bearer `  |
-
-**Request Body**
+**Get All Courses**
+```http
+GET /api/courses
 ```
+
+**Create Course** (Admin only)
+```http
+POST /api/courses
+Authorization: Bearer <token>
+Content-Type: application/json
+
 {
-    "title": "Introduction to Python",
-    "description": "A comprehensive course for Python beginners.",
-    "instructor": "Jane Doe",
-    "price": 99.99,
-    "lessons": [
-        {
-            "title": "Lesson 1: Setup and Hello World",
-            "videoUrl": "https://example.com/video1"
-        }
-    ]
+  "title": "JavaScript Basics",
+  "description": "Learn JavaScript fundamentals",
+  "instructor": "Sarah Wilson",
+  "price": 49.99,
+  "lessons": [
+    {
+      "title": "Variables and Data Types",
+      "videoUrl": "https://example.com/video1"
+    }
+  ]
 }
 ```
 
-**Responses**
-- **`201 Created`** (Success)
-  ```
-  {
-      "success": true,
-      "data": {
-          "_id": "60d5f1b3e6c9a4001f7b8e19",
-          "title": "Introduction to Python",
-          "instructor": "Jane Doe",
-          "price": 99.99,
-          "lessons": [ /* ... */ ]
-      }
-  }
-  ```
-- **`403 Forbidden`** (Non-admin user attempts access)
-  ```
-  {
-      "success": false,
-      "message": "Not authorized as an admin"
-  }
-  ```
-
-### **`GET /api/courses`**
-
-Retrieves a list of all publicly available courses.
-
-**Responses**
-- **`200 OK`** (Success)
-  ```
-  {
-      "success": true,
-      "data": [
-          {
-              "_id": "60d5f1b3e6c9a4001f7b8e19",
-              "title": "Introduction to Python",
-              "instructor": "Jane Doe"
-          }
-      ]
-  }
-  ```
-
-### **`POST /api/courses/:id/enroll`**
-
-Enrolls the currently authenticated user in a specific course.
-
-**Path Parameters**
-| Parameter | Type   | Description             |
-| :-------- | :----- | :---------------------- |
-| `id`      | String | The ID of the course to enroll in. |
-
-**Headers**
-| Key             | Value                     |
-| :-------------- | :------------------------ |
-| `Authorization` | `Bearer ` |
-
-**Responses**
-- **`201 Created`** (Success)
-  ```
-  {
-      "success": true,
-      "data": {
-          "_id": "60d5f1c4e6c9a4001f7b8e1b",
-          "user": "user_id_here",
-          "course": "course_id_here",
-          "enrolledAt": "2025-07-20T12:00:00.000Z"
-      }
-  }
-  ```
-- **`400 Bad Request`** (User already enrolled)
-  ```
-  {
-      "success": false,
-      "message": "User already enrolled"
-  }
-  ```
-
----
-
-## 3. Progress Endpoints
-
-### **`POST /api/progress/lessons/complete`**
-
-Marks a lesson as completed for the authenticated user.
-
-**Headers**
-| Key             | Value                       |
-| :-------------- | :-------------------------- |
-| `Content-Type`  | `application/json`          |
-| `Authorization` | `Bearer `   |
-
-**Request Body**
+**Enroll in Course**
+```http
+POST /api/courses/:courseId/enroll
+Authorization: Bearer <token>
 ```
+
+### Progress Tracking
+
+**Mark Lesson Complete**
+```http
+POST /api/progress/lessons/complete
+Authorization: Bearer <token>
+Content-Type: application/json
+
 {
-    "courseId": "60d5f1b3e6c9a4001f7b8e19",
-    "lessonId": "60d5f1b3e6c9a4001f7b8e1a"
+  "courseId": "course_id_here",
+  "lessonId": "lesson_id_here"
 }
 ```
 
-**Responses**
-- **`200 OK`** (Success)
-  ```
-  {
-      "success": true,
-      "data": {
-          "completedLessons": ["60d5f1b3e6c9a4001f7b8e1a"],
-          "progress": 50,
-          /* ... other enrollment details */
-      }
-  }
-  ```
-
-### **`POST /api/progress/quizzes/attempt`**
-
-Submits a user's answers for a quiz and records the score.
-
-**Headers**
-| Key             | Value                       |
-| :-------------- | :-------------------------- |
-| `Content-Type`  | `application/json`          |
-| `Authorization` | `Bearer `   |
-
-**Request Body**
-```
-{
-    "courseId": "60d5f1b3e6c9a4001f7b8e19",
-    "quizId": "60d5f1b3e6c9a4001f7b8e1c",
-    "answers": [1][2]
-}
+**Get Progress**
+```http
+GET /api/progress/:courseId
+Authorization: Bearer <token>
 ```
 
-**Responses**
-- **`200 OK`** (Success)
-  ```
-  {
-      "success": true,
-      "data": {
-          "score": 2,
-          "total": 3
-      }
-  }
-  ```
+## Usage Examples
 
-### **`GET /api/progress/:courseId`**
-
-Retrieves the detailed progress for a user in a specific course.
-
-**Path Parameters**
-| Parameter | Type   | Description                      |
-| :-------- | :----- | :------------------------------- |
-| `courseId`| String | The ID of the course to get progress for. |
-
-**Headers**
-| Key             | Value                     |
-| :-------------- | :------------------------ |
-| `Authorization` | `Bearer ` |
-
-**Responses**
-- **`200 OK`** (Success)
-  ```
-  {
-      "success": true,
-      "data": {
-          "course": "course_id_here",
-          "user": "user_id_here",
-          "progress": 50,
-          "completedLessons": ["lesson_id_1"],
-          "quizAttempts": [ /* ... */ ]
-      }
-  }
-  ```
-- **`404 Not Found`** (User is not enrolled)
-  ```
-  {
-      "success": false,
-      "message": "Not enrolled in this course"
-  }
-  ```
+### Creating an Admin User
+```bash
+curl -X POST http://localhost:5000/api/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "email": "admin@example.com",
+    "password": "admin123",
+    "role": "admin"
+  }'
 ```
+
+### Creating a Course
+```bash
+# First login to get token
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "admin123"
+  }'
+
+# Then create course with the token
+curl -X POST http://localhost:5000/api/courses \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{
+    "title": "React Fundamentals",
+    "description": "Build modern web apps with React",
+    "instructor": "Mike Johnson",
+    "price": 79.99,
+    "lessons": []
+  }'
+```
+
+## Project Structure
+
+```
+├── config/
+│   └── db.js          # Database connection
+├── controllers/
+│   ├── authController.js
+│   ├── courseController.js
+│   └── progressController.js
+├── middleware/
+│   └── authMiddleware.js
+├── models/
+│   ├── Course.js
+│   ├── Enrollment.js
+│   └── User.js
+├── routes/
+│   ├── authRoutes.js
+│   ├── courseRoutes.js
+│   └── progressRoutes.js
+└── server.js
+```
+
+## Features
+
+- User authentication with JWT
+- Role-based access control (user/admin)
+- Course creation and management
+- Student enrollment system
+- Progress tracking
