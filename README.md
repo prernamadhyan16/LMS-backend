@@ -103,43 +103,6 @@ GET /api/progress/:courseId
 Authorization: Bearer <token>
 ```
 
-## Usage Examples
-
-### Creating an Admin User
-```bash
-curl -X POST http://localhost:5000/api/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "email": "admin@example.com",
-    "password": "admin123",
-    "role": "admin"
-  }'
-```
-
-### Creating a Course
-```bash
-# First login to get token
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "admin@example.com",
-    "password": "admin123"
-  }'
-
-# Then create course with the token
-curl -X POST http://localhost:5000/api/courses \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-  -d '{
-    "title": "React Fundamentals",
-    "description": "Build modern web apps with React",
-    "instructor": "Mike Johnson",
-    "price": 79.99,
-    "lessons": []
-  }'
-```
-
 ## Project Structure
 
 ```
